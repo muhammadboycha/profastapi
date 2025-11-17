@@ -7,6 +7,7 @@ from datetime import datetime,timedelta
 from db import dbConnect
 import random
 import os
+import jwt
 
 load_dotenv() 
 
@@ -23,7 +24,7 @@ class User(BaseModel):
     mobile:str
 
 class Login(BaseModel):
-    mobile:int  
+    mobile:str  
     otp:int  
     
 twilio_client = Client(
@@ -86,6 +87,15 @@ def home(Data:Login):
          return {"message":"Otp expire.Please request new one"}
         if userExist["otp"] != Data.otp:
             return {"message":"Invalid otp"}
-        return {"message":"User logiin sucessfully"}
+        token = jwt.encode({"mobile": Data.mobile, "exp": datetime.utcnow() + timedelta(hours=1)},os.getenv("KEY"), algorithm="HS256")
+        return {"message":"User logiin sucessfully","token":token}
    except Exception as error:
        print("error occure",error)
+       
+@app.post("/logout")
+def logout():
+    try:
+        return{"message":"User logout sucessfully?"}
+    except Exception as error:
+       print("error occure",error)
+             
